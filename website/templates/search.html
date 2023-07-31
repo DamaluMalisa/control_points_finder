@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Home Page{% endblock %}
+
+{% block styles %}
+<style>
+    .floating-ad.left-ad {
+        background-color: #f8f8f8; /* Set the desired background color */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="floating-ad left-ad">
+        <!-- Left Ad Content -->
+        <h3>Left Ad</h3>
+        <p>Ad description goes here</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo">
+      <form action="{{ url_for('views.search') }}" method="post"> <!-- Updated endpoint name to 'views.search' -->
+        <input type="text" name="search" id="search-input" placeholder="Enter your search term">
+        <br>
+        <input type="submit" value="Search">
+      </form>
+    </div>
+    <div class="col-md-3">
+      <div class="floating-ad right-ad">
+        <!-- Right Ad Content -->
+        <h3>Point ID</h3>
+        <p>Suggestion Box</p>
+        <div id="suggestions" class="mt-3"></div> <!-- Added a container for search suggestions -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    var searchInput = $('#search-input');
+    var suggestionBox = $('#suggestions');
+
+    searchInput.on('input', function() {
+      var searchTerm = searchInput.val();
+      $.get('/search', { search: searchTerm }, function(data) { // Updated the AJAX request URL to '/search'
+        var suggestions = data.suggestions;
+        suggestionBox.empty();
+
+        if (suggestions.length > 0) {
+          var suggestionList = $('<ul>').addClass('list-group'); // Create an unordered list with Bootstrap class
+
+          for (var i = 0; i < suggestions.length; i++) {
+            var suggestion = suggestions[i];
+            var suggestionItem = $('<li>').addClass('list-group-item').text(suggestion); // Create a list item with Bootstrap class
+            suggestionItem.on('click', function() {
+              searchInput.val($(this).text());
+              suggestionBox.empty();
+            });
+
+            suggestionList.append(suggestionItem); // Append the list item to the unordered list
+          }
+
+          suggestionBox.append(suggestionList); // Append the unordered list to the suggestion box
+        } else {
+          suggestionBox.text('No suggestions found.');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

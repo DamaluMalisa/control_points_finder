@@ -1,0 +1,372 @@
+<!-- HTML code (details.html) -->
+{% extends 'base.html' %}
+
+{% block title %}Survey Station Description Card{% endblock %}
+
+{% block content %}
+
+  <h1>Survey Station Description Card</h1>
+
+  <table>
+    <!-- Table rows for point information -->
+    <tr>
+        <th>Project:</th>
+        <td>Data Base for Survey Controls around UDSM</td>
+    </tr>
+    <tr>
+        <th>Point ID:</th>
+        <td>{{ control_point_data.point_id }}</td>
+    </tr>
+    <tr>
+        <th>Description:</th>
+        <td>{{ control_point_data.monument_status }}</td>
+    </tr>
+    <tr>
+        <th>Location:</th>
+        <td>{{ control_point_data.usage }}</td>
+    </tr>
+    <tr>
+        <th>Instrument Used:</th>
+        <td>LEICA VIVA</td>
+    </tr>
+    <tr>
+        <th>District/Village:</th>
+        <td>KINONDONI</td>
+    </tr>
+    <tr>
+        <th>Approx. Chng:</th>
+        <td>REGIONAL</td>
+    </tr>
+    <tr>
+        <th>Method of Survey:</th>
+        <td>GPS STATIC OBSERVATIONS</td>
+    </tr>
+    <tr>
+        <!-- Table rows for coordinates -->
+        <th>Coordinates:</th>
+        <td>
+            <table>
+                <tr>
+                    <th>UTM (ARC 1960) Northing:</th>
+                    <td>{{ control_point_data.arch1960_northings }}</td>
+                </tr>
+                <tr>
+                    <th>UTM (ARC 1960) Easting:</th>
+                    <td>{{ control_point_data.arch1960_eastings }}</td>
+                </tr>
+                <tr>
+                    <th>UTM (WGS 84) Northing:</th>
+                    <td>{{ control_point_data.wgs84_northings }}</td>
+                </tr>
+                <tr>
+                    <th>UTM (WGS 84) Easting:</th>
+                    <td>{{ control_point_data.wgs84_eastings }}</td>
+                </tr>
+                <tr>
+                    <th>Height (H):</th>
+                    <td>{{ control_point_data.heights }}</td>
+                </tr>
+            </table>
+            <br />
+        </td>
+    </tr>
+    <tr>
+      <!-- Table row for location sketch -->
+      <th>Location Sketch:</th>
+      <td class="center-image">
+          {% if control_point_data.image_description %}
+              <img src="{{ url_for('static', filename='images/control_point_images/' + control_point_data.image_description) }}" style="width: 500px; height: auto;">
+          {% else %}
+              No Data
+          {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <!-- Table row for satellite image -->
+      <th>Description of the Point's Location:</th>
+      <td class="center-image">
+          {% if control_point_data.satellite_image %}
+              <img src="{{ url_for('static', filename='images/sattelite_image/' + control_point_data.satellite_image) }}" style="width: 500px; height: auto;">
+          {% else %}
+              No Data
+          {% endif %}
+      </td>
+    </tr>
+    <!-- Table rows for additional information -->
+    <tr>
+        <th>Date of Survey:</th>
+        <td>14th September 2020</td>
+    </tr>
+    <tr>
+        <th>Surveyed By:</th>
+        <td>Group One</td>
+    </tr>
+  </table>
+
+  <br />
+  <br />
+
+  <div id="map-container">
+    <h1>Current Location and Direction</h1>
+    <p id="coordinates">Waiting for location...</p>
+    <div id="map"></div>
+    <br />
+    <button id="directions-button">Get Directions</button>
+  </div>
+
+  <div id="route-details"></div>
+
+  <script>
+
+    
+    function showPosition(position) {
+      var latitude = position.coords.latitude;
+      var longitude = position.coords.longitude;
+      var coordinatesElement = document.getElementById("coordinates");
+      coordinatesElement.textContent = "Latitude: " + latitude + ", Longitude: " + longitude;
+
+      var mapElement = document.getElementById("map");
+      var mapOptions = {
+        center: { lat: latitude, lng: longitude },
+        zoom: 12,
+        styles: [
+          // Map styles here
+          {
+            "featureType": "administrative",
+            "elementType": "labels.text.fill",
+            "stylers": [
+              { "color": "#444444" }
+            ]
+          },
+          {
+            "featureType": "landscape",
+            "elementType": "all",
+            "stylers": [
+              { "color": "#f2f2f2" }
+            ]
+          },
+          {
+            "featureType": "landscape.man_made",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "gamma": "2.00" },
+              { "color": "#c6c6c6" }
+            ]
+          },
+          {
+            "featureType": "poi",
+            "elementType": "all",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "poi.park",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" },
+              { "color": "#466149" },
+              { "lightness": "-5" },
+              { "gamma": "5.00" },
+              { "weight": "0.01" }
+            ]
+          },
+          {
+            "featureType": "poi.park",
+            "elementType": "labels.text",
+            "stylers": [
+              { "visibility": "on" },
+              { "saturation": "-1" },
+              { "color": "#000000" },
+              { "gamma": "5.00" },
+              { "weight": "0.01" }
+            ]
+          },
+          {
+            "featureType": "poi.school",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" },
+              { "color": "#d38f8f" }
+            ]
+          },
+          {
+            "featureType": "poi.school",
+            "elementType": "labels.icon",
+            "stylers": [
+              { "color": "#131212" }
+            ]
+          },
+          {
+            "featureType": "road",
+            "elementType": "all",
+            "stylers": [
+              { "saturation": -100 },
+              { "lightness": 45 }
+            ]
+          },
+          {
+            "featureType": "road.highway",
+            "elementType": "all",
+            "stylers": [
+              { "visibility": "simplified" }
+            ]
+          },
+          {
+            "featureType": "road.arterial",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" },
+              { "color": "#4a4161" },
+              { "gamma": "2.00" },
+              { "lightness": "4" }
+            ]
+          },
+          {
+            "featureType": "road.arterial",
+            "elementType": "geometry.stroke",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "road.arterial",
+            "elementType": "labels.text",
+            "stylers": [
+              { "color": "#010101" },
+              { "gamma": "1.85" },
+              { "lightness": "11" },
+              { "saturation": "11" },
+              { "weight": "0.01" }
+            ]
+          },
+          {
+            "featureType": "road.arterial",
+            "elementType": "labels.icon",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "road.local",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" },
+              { "color": "#b5a8be" }
+            ]
+          },
+          {
+            "featureType": "road.local",
+            "elementType": "geometry.stroke",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "road.local",
+            "elementType": "labels.text.fill",
+            "stylers": [
+              { "color": "#000000" },
+              { "weight": "0.01" },
+              { "gamma": "0.00" },
+              { "lightness": "-100" }
+            ]
+          },
+          {
+            "featureType": "road.local",
+            "elementType": "labels.text.stroke",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "transit",
+            "elementType": "all",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "transit",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "water",
+            "elementType": "all",
+            "stylers": [
+              { "color": "#3d6576" },
+              { "visibility": "on" }
+            ]
+          }
+        ]
+      };
+      var map = new google.maps.Map(mapElement, mapOptions);
+
+      var marker = new google.maps.Marker({
+        position: { lat: {{ control_point_data.latitude }}, lng: {{ control_point_data.longitude }} }, // Replace with the actual coordinates from the database
+        map: map
+      });
+
+      var directionsService = new google.maps.DirectionsService();
+      var directionsRenderer = new google.maps.DirectionsRenderer({
+        polylineOptions: {
+          strokeColor: "#000000" // Set the direction line color to black
+        },
+        map: map,
+        suppressMarkers: true
+      });
+
+      var directionsButton = document.getElementById("directions-button");
+      directionsButton.addEventListener("click", function() {
+        var destination = {
+          lat: {{ control_point_data.latitude }},
+          lng: {{ control_point_data.longitude }}
+        };
+
+        var request = {
+          origin: { lat: latitude, lng: longitude },
+          destination: destination,
+          travelMode: 'DRIVING'
+        };
+
+        directionsService.route(request, function(result, status) {
+          if (status == 'OK') {
+            directionsRenderer.setDirections(result);
+
+            // Extract and display route details
+            var route = result.routes[0];
+            var leg = route.legs[0];
+
+            var distance = leg.distance.text;
+            var duration = leg.duration.text;
+
+            var routeDetailsElement = document.getElementById("route-details");
+            routeDetailsElement.innerHTML = "Distance: " + distance + "<br>Duration: " + duration;
+
+            directionsButton.style.display = "none";
+          }
+        });
+      });
+    }
+
+    function showError(error) {
+      var coordinatesElement = document.getElementById("coordinates");
+      coordinatesElement.textContent = "Error getting location: " + error.message;
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+      } else {
+        var coordinatesElement = document.getElementById("coordinates");
+        coordinatesElement.textContent = "Geolocation is not supported by this browser.";
+      }
+    }
+
+    getLocation();
+  </script>
+
+{% endblock %}

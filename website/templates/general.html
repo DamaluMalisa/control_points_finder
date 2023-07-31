@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}Survey Station Description Card{% endblock %}
+
+{% block content %}
+
+  <h1>Welcome Home</h1>
+
+  <div id="map-container">
+    <h1>University of Dar es salaam control points</h1>
+    <div id="map"></div>
+  </div>
+
+  <script>
+    function showError(error) {
+      var coordinatesElement = document.getElementById("coordinates");
+      coordinatesElement.textContent = "Error getting location: " + error.message;
+    }
+
+    function getLocation() {
+      var mapElement = document.getElementById("map");
+      var mapOptions = {
+        center: { lat: -6.7924, lng: 39.2083 }, // Set your desired default center
+        zoom: 12,
+        styles: [
+        {
+            "featureType": "administrative",
+            "elementType": "labels.text.fill",
+            "stylers": [
+              { "color": "#444444" }
+            ]
+          },
+          {
+            "featureType": "landscape",
+            "elementType": "all",
+            "stylers": [
+              { "color": "#f2f2f2" }
+            ]
+          },
+          {
+            "featureType": "landscape.man_made",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "gamma": "2.00" },
+              { "color": "#c6c6c6" }
+            ]
+          },
+          {
+            "featureType": "poi",
+            "elementType": "all",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "poi.park",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" },
+              { "color": "#466149" },
+              { "lightness": "-5" },
+              { "gamma": "5.00" },
+              { "weight": "0.01" }
+            ]
+          },
+          {
+            "featureType": "poi.park",
+            "elementType": "labels.text",
+            "stylers": [
+              { "visibility": "on" },
+              { "saturation": "-1" },
+              { "color": "#000000" },
+              { "gamma": "5.00" },
+              { "weight": "0.01" }
+            ]
+          },
+          {
+            "featureType": "poi.school",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" },
+              { "color": "#d38f8f" }
+            ]
+          },
+          {
+            "featureType": "poi.school",
+            "elementType": "labels.icon",
+            "stylers": [
+              { "color": "#131212" }
+            ]
+          },
+          {
+            "featureType": "road",
+            "elementType": "all",
+            "stylers": [
+              { "saturation": -100 },
+              { "lightness": 45 }
+            ]
+          },
+          {
+            "featureType": "road.highway",
+            "elementType": "all",
+            "stylers": [
+              { "visibility": "simplified" }
+            ]
+          },
+          {
+            "featureType": "road.arterial",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" },
+              { "color": "#4a4161" },
+              { "gamma": "2.00" },
+              { "lightness": "4" }
+            ]
+          },
+          {
+            "featureType": "road.arterial",
+            "elementType": "geometry.stroke",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "road.arterial",
+            "elementType": "labels.text",
+            "stylers": [
+              { "color": "#010101" },
+              { "gamma": "1.85" },
+              { "lightness": "11" },
+              { "saturation": "11" },
+              { "weight": "0.01" }
+            ]
+          },
+          {
+            "featureType": "road.arterial",
+            "elementType": "labels.icon",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "road.local",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" },
+              { "color": "#b5a8be" }
+            ]
+          },
+          {
+            "featureType": "road.local",
+            "elementType": "geometry.stroke",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "road.local",
+            "elementType": "labels.text.fill",
+            "stylers": [
+              { "color": "#000000" },
+              { "weight": "0.01" },
+              { "gamma": "0.00" },
+              { "lightness": "-100" }
+            ]
+          },
+          {
+            "featureType": "road.local",
+            "elementType": "labels.text.stroke",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "transit",
+            "elementType": "all",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "transit",
+            "elementType": "geometry.fill",
+            "stylers": [
+              { "visibility": "on" }
+            ]
+          },
+          {
+            "featureType": "water",
+            "elementType": "all",
+            "stylers": [
+              { "color": "#3d6576" },
+              { "visibility": "on" }
+            ]
+          }
+        ]
+      };
+      var map = new google.maps.Map(mapElement, mapOptions);
+
+      var rawData = `{{ data|tojson|safe }}`; // Retrieve the data from Flask and convert it to a JSON string
+      var data;
+      try {
+        data = JSON.parse(rawData); // Convert the JSON string to a JavaScript object
+      } catch (error) {
+        console.error("Error parsing JSON data:", error);
+        return;
+      }
+
+      // Add markers based on the retrieved data
+      var markers = [];
+      for (var i = 0; i < data.length; i++) {
+        var marker = new google.maps.Marker({
+          position: { lat: data[i].latitude, lng: data[i].longitude },
+          map: map,
+          label: {
+            text: data[i].point_id, // Customize the label as needed
+            color: 'black',
+            fontWeight: 'bold',
+            fontSize: '12px',
+            labelOrigin: new google.maps.Point(0, 50) // Adjust the vertical position of the label
+          }
+        });
+
+        markers.push(marker);
+
+        // Add click event listener to each marker
+        marker.addListener("click", function () {
+          // Zoom in and center the map on the clicked marker
+          map.setZoom(15);
+          map.setCenter(this.getPosition());
+
+          // Highlight the clicked marker
+          this.setAnimation(google.maps.Animation.BOUNCE);
+          setTimeout(function () {
+            this.setAnimation(null);
+          }.bind(this), 2000);
+        });
+      }
+    }
+
+    // Call the getLocation function once the DOM has fully loaded
+    document.addEventListener("DOMContentLoaded", function() {
+      getLocation();
+    });
+  </script>
+
+{% endblock %}
